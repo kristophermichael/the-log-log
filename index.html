@@ -1049,7 +1049,7 @@ let selectedMonth = null;
 async function logPoop() {
   const entry = { ts: Date.now(), createdAt: Date.now() };
   cachedData.push(entry);
-  visibleRows = 8;
+  visibleRows = 10;
   triggerBtn();
   showToast(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
   spawnConfetti();
@@ -1068,7 +1068,7 @@ async function deleteLog(ts) {
     cachedData = cachedData.filter(d => d.ts !== ts);
     await deleteLogFromSupabase(ts);
   }
-  if (visibleRows > 8) visibleRows = Math.max(8, visibleRows - 1);
+  if (visibleRows > 10) visibleRows = Math.max(10, visibleRows - 1);
   showToast('Entry deleted. 🗑');
   render();
 }
@@ -1406,7 +1406,7 @@ function renderYearBars(data) {
   `).join('');
 }
 
-let visibleRows = 8;
+let visibleRows = 10;
 let selectMode = false;
 let selectedTs = new Set();
 
@@ -1524,7 +1524,7 @@ function renderTable(data) {
   const showAllBtn = document.getElementById('showAllBtn');
   const collapseBtn = document.getElementById('collapseBtn');
   const hasMore = combined.length > visibleRows;
-  const isExpanded = visibleRows > 8;
+  const isExpanded = visibleRows > 10;
 
   if (hasMore || isExpanded) {
     showMoreContainer.style.display = 'flex';
@@ -1539,7 +1539,7 @@ function renderTable(data) {
 }
 
 function collapseLogs() {
-  visibleRows = 8;
+  visibleRows = 10;
   renderTable(getData());
   document.getElementById('logTableBody').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
