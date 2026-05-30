@@ -510,7 +510,6 @@
       <span>👤</span>
       <span id="userPillName"></span>
       <button class="logout-btn" onclick="logout()">Sign out</button>
-      <button class="logout-btn" onclick="openDeleteAccount()" style="color:#F87171;">Delete account</button>
     </div>
   </div>
   <span class="header-emoji">💩</span>
@@ -698,6 +697,9 @@
   </div>
 
   <footer>Built with love (and fiber) &bull; A FlowSuite App</footer>
+  <div style="text-align:center;margin-top:16px;">
+    <button onclick="openDeleteAccount()" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:0.78rem;color:var(--text-faint);cursor:pointer;text-decoration:underline;transition:color 0.15s;" onmouseover="this.style.color='#F87171'" onmouseout="this.style.color='var(--text-faint)'">Delete my account</button>
+  </div>
 </main>
 
 <!-- Delete Account Modal -->
