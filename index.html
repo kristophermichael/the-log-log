@@ -589,22 +589,22 @@
     <div class="stat-card">
       <div class="stat-label">Today</div>
       <div class="stat-value" id="statToday">0</div>
-      <div class="stat-sub">poops</div>
+      <div class="stat-sub" id="subToday">poops</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">This Month</div>
       <div class="stat-value" id="statMonth">0</div>
-      <div class="stat-sub">poops</div>
+      <div class="stat-sub" id="subMonth">poops</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">This Year</div>
       <div class="stat-value" id="statYear">0</div>
-      <div class="stat-sub">poops</div>
+      <div class="stat-sub" id="subYear">poops</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">All Time</div>
       <div class="stat-value" id="statAllTime">0</div>
-      <div class="stat-sub">poops</div>
+      <div class="stat-sub" id="subAllTime">poops</div>
     </div>
   </div>
 
@@ -1618,6 +1618,10 @@ function renderStats(data) {
   document.getElementById('statMonth').textContent = thisMonth;
   document.getElementById('statYear').textContent = thisYear;
   document.getElementById('statAllTime').textContent = data.length;
+  document.getElementById('subToday').textContent = today === 1 ? 'poop' : 'poops';
+  document.getElementById('subMonth').textContent = thisMonth === 1 ? 'poop' : 'poops';
+  document.getElementById('subYear').textContent = thisYear === 1 ? 'poop' : 'poops';
+  document.getElementById('subAllTime').textContent = data.length === 1 ? 'poop' : 'poops';
 }
 
 function render() {
