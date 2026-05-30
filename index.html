@@ -510,6 +510,7 @@
       <span>👤</span>
       <span id="userPillName"></span>
       <button class="logout-btn" onclick="logout()">Sign out</button>
+      <button class="logout-btn" onclick="openDeleteAccount()" style="color:#F87171;">Delete account</button>
     </div>
   </div>
   <span class="header-emoji">💩</span>
@@ -698,6 +699,23 @@
 
   <footer>Built with love (and fiber) &bull; A FlowSuite App</footer>
 </main>
+
+<!-- Delete Account Modal -->
+<div class="modal-backdrop" id="deleteAccountBackdrop" onclick="handleDeleteBackdropClick(event)">
+  <div class="modal">
+    <h3>⚠️ Delete Account</h3>
+    <p class="modal-sub" style="color:#F87171;">This will permanently delete your account and all your logs. This cannot be undone.</p>
+    <div class="field-group">
+      <label>Confirm your PIN</label>
+      <input type="password" id="deleteAccountPin" placeholder="4-digit PIN" maxlength="4" inputmode="numeric">
+    </div>
+    <div id="deleteAccountError" style="color:#F87171;font-size:0.82rem;margin-bottom:12px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteAccount()">Cancel</button>
+      <button class="btn-primary" onclick="deleteAccount()" style="background:#EF4444;">🗑 Delete Everything</button>
+    </div>
+  </div>
+</div>
 
 <!-- Auth Screen -->
 <div id="authScreen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;overflow-y:auto;padding:40px 20px;">
@@ -1702,7 +1720,58 @@ async function saveManual() {
   await pushLogToSupabase(entry);
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+function openDeleteAccount() {
+  document.getElementById('deleteAccountPin').value = '';
+  document.getElementById('deleteAccountError').style.display = 'none';
+  document.getElementById('deleteAccountBackdrop').classList.add('open');
+}
+
+function closeDeleteAccount() {
+  document.getElementById('deleteAccountBackdrop').classList.remove('open');
+}
+
+function handleDeleteBackdropClick(e) {
+  if (e.target === document.getElementById('deleteAccountBackdrop')) closeDeleteAccount();
+}
+
+async function deleteAccount() {
+  const pin = document.getElementById('deleteAccountPin').value.trim();
+  const errEl = document.getElementById('deleteAccountError');
+  if (pin.length !== 4 || !/^\d+$/.test(pin)) {
+    errEl.textContent = 'Please enter your 4-digit PIN.';
+    errEl.style.display = '';
+    return;
+  }
+  try {
+    const hashed = await hashPin(pin);
+    const rows = await sbFetch('GET', `users?username=eq.${encodeURIComponent(currentUser)}&select=pin`);
+    if (!rows.length || rows[0].pin !== hashed) {
+      errEl.textContent = 'Incorrect PIN. Try again.';
+      errEl.style.display = '';
+      return;
+    }
+    await sbFetch('DELETE', `poop_logs?username=eq.${encodeURIComponent(currentUser)}`);
+    await sbFetch('DELETE', `stream_logs?username=eq.${encodeURIComponent(currentUser)}`);
+    await sbFetch('DELETE', `users?username=eq.${encodeURIComponent(currentUser)}`);
+    localStorage.removeItem('flow_session');
+    closeDeleteAccount();
+    showToast('Account deleted. Goodbye! 👋');
+    setTimeout(() => {
+      currentUser = null;
+      cachedData = [];
+      document.getElementById('userPill').style.display = 'none';
+      document.getElementById('authScreen').style.display = '';
+      setAuthTab('signup');
+    }, 1500);
+  } catch(e) {
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.style.display = '';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeDeleteAccount(); }
+});
 </script>
 </body>
 </html>
