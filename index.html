@@ -692,6 +692,7 @@
     </div>
     <div id="showMoreContainer" style="display:none; text-align:center; padding-top:16px; border-top:1px solid var(--border); margin-top:4px; gap:10px; justify-content:center; align-items:center;">
       <button id="showMoreBtn" onclick="showMore()" style="background:none; border:1px solid var(--border-hover); border-radius:100px; padding:8px 24px; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; color:var(--text-muted); cursor:pointer;" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='none';this.style.color='var(--text-muted)'">Show more</button>
+      <button id="showAllBtn" onclick="showAll()" style="background:none; border:1px solid var(--border-hover); border-radius:100px; padding:8px 24px; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; color:var(--text-muted); cursor:pointer;" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='none';this.style.color='var(--text-muted)'">Show all</button>
       <button id="collapseBtn" onclick="collapseLogs()" style="display:none; background:none; border:1px solid var(--border-hover); border-radius:100px; padding:8px 24px; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; color:var(--text-muted); cursor:pointer;" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='none';this.style.color='var(--text-muted)'">↑ Collapse</button>
     </div>
   </div>
@@ -1520,6 +1521,7 @@ function renderTable(data) {
     </tr>`;
   }).join('');
   const showMoreBtn = document.getElementById('showMoreBtn');
+  const showAllBtn = document.getElementById('showAllBtn');
   const collapseBtn = document.getElementById('collapseBtn');
   const hasMore = combined.length > visibleRows;
   const isExpanded = visibleRows > 8;
@@ -1527,6 +1529,7 @@ function renderTable(data) {
   if (hasMore || isExpanded) {
     showMoreContainer.style.display = 'flex';
     showMoreBtn.style.display = hasMore ? '' : 'none';
+    showAllBtn.style.display = hasMore ? '' : 'none';
     if (hasMore) showMoreBtn.textContent = `Show ${Math.min(10, combined.length - visibleRows)} more`;
     collapseBtn.style.display = isExpanded ? '' : 'none';
   } else {
@@ -1539,6 +1542,11 @@ function collapseLogs() {
   visibleRows = 8;
   renderTable(getData());
   document.getElementById('logTableBody').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showAll() {
+  visibleRows = Infinity;
+  renderTable(getData());
 }
 
 function showMore() {
