@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The Log Log">
 <title>The Log Log</title>
 <script>
 (function() {
@@ -662,8 +668,8 @@
   </div>
 
   <div class="section-card">
-    <h2>📊 Yearly Overview</h2>
-    <div id="yearBars"></div>
+    <h2>🏆 Personal Bests</h2>
+    <div id="personalBests" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
   </div>
 
   <div class="section-card">
@@ -1385,26 +1391,99 @@ function renderMonthChart() {
   });
 }
 
-function renderYearBars(data) {
-  const years = {};
-  data.forEach(d => {
-    const y = new Date(d.ts).getFullYear();
-    years[y] = (years[y] || 0) + 1;
-  });
-  const sortedYears = Object.keys(years).sort().reverse();
-  const container = document.getElementById('yearBars');
-  if (sortedYears.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="big">📅</div>No yearly data yet.</div>';
+function renderPersonalBests(data) {
+  const container = document.getElementById('personalBests');
+  const nonBulk = data.filter(d => !d.bulk);
+
+  if (nonBulk.length === 0) {
+    container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-muted);font-size:0.9rem;">Log some poops to unlock your personal bests! 💩</div>`;
     return;
   }
-  const maxVal = Math.max(...Object.values(years));
-  container.innerHTML = sortedYears.map(y => `
-    <div class="year-total-bar">
-      <div class="year-label">${y}</div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width:${Math.round((years[y]/maxVal)*100)}%"></div>
-      </div>
-      <div class="bar-count">${years[y]}</div>
+
+  // Best month
+  const monthCounts = {};
+  data.forEach(d => {
+    const date = new Date(d.ts);
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    monthCounts[key] = (monthCounts[key] || 0) + 1;
+  });
+  const bestMonthKey = Object.keys(monthCounts).sort((a,b) => monthCounts[b] - monthCounts[a])[0];
+  const [bmy, bmm] = bestMonthKey.split('-');
+  const bestMonthLabel = `${MONTH_FULL[parseInt(bmm)]} ${bmy}`;
+  const bestMonthCount = monthCounts[bestMonthKey];
+
+  // Most in one day
+  const dayCounts = {};
+  nonBulk.forEach(d => {
+    const date = new Date(d.ts);
+    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    dayCounts[key] = (dayCounts[key] || 0) + 1;
+  });
+  const bestDayKey = Object.keys(dayCounts).sort((a,b) => dayCounts[b] - dayCounts[a])[0];
+  const [bdy, bdm, bdd] = bestDayKey.split('-');
+  const bestDayLabel = `${MONTHS[parseInt(bdm)]} ${bdd}, ${bdy}`;
+  const bestDayCount = dayCounts[bestDayKey];
+
+  // Longest streak ever + date range
+  const loggedDays = new Set(nonBulk.map(d => {
+    const date = new Date(d.ts);
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  }));
+  const allDays = [...loggedDays].sort();
+  let bestStreak = 0, tempStreak = 0, bestStreakEnd = 0;
+  allDays.forEach((key, i) => {
+    if (i === 0) { tempStreak = 1; }
+    else {
+      const prev = new Date(allDays[i-1]);
+      const curr = new Date(key);
+      const diff = (curr - prev) / 86400000;
+      tempStreak = diff === 1 ? tempStreak + 1 : 1;
+    }
+    if (tempStreak > bestStreak) { bestStreak = tempStreak; bestStreakEnd = i; }
+  });
+  const streakEndDate = new Date(allDays[bestStreakEnd]);
+  const streakStartDate = new Date(allDays[bestStreakEnd - bestStreak + 1]);
+  const fmtDate = d => `${d.getMonth()+1}/${d.getDate()}`;
+  const streakRange = bestStreak > 1 ? `${fmtDate(streakStartDate)} – ${fmtDate(streakEndDate)}` : fmtDate(streakEndDate);
+
+  // Most active day of week
+  const dowCounts = [0,0,0,0,0,0,0];
+  nonBulk.forEach(d => dowCounts[new Date(d.ts).getDay()]++);
+  const bestDow = dowCounts.indexOf(Math.max(...dowCounts));
+
+  // Earliest log
+  const earliest = nonBulk.reduce((best, d) => {
+    const date = new Date(d.ts);
+    const mins = date.getHours() * 60 + date.getMinutes();
+    return mins < best.mins ? { mins, ts: d.ts } : best;
+  }, { mins: Infinity, ts: null });
+  const earliestDate = new Date(earliest.ts);
+  const earliestLabel = earliestDate.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
+  // Latest log
+  const latest = nonBulk.reduce((best, d) => {
+    const date = new Date(d.ts);
+    const mins = date.getHours() * 60 + date.getMinutes();
+    return mins > best.mins ? { mins, ts: d.ts } : best;
+  }, { mins: -1, ts: null });
+  const latestDate = new Date(latest.ts);
+  const latestLabel = latestDate.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
+  const bests = [
+    { icon:'🥇', label:'Best Month', value: bestMonthCount, sub: bestMonthLabel },
+    { icon:'🔥', label:'Longest Streak', value: `${bestStreak}d`, sub: streakRange },
+    { icon:'⚡', label:'Most In One Day', value: bestDayCount, sub: bestDayLabel },
+    { icon:'📅', label:'Most Active Day', value: DAYS[bestDow], sub: `${dowCounts[bestDow]} total poops` },
+    { icon:'🐦', label:'Earliest Log', value: earliestLabel, sub: 'earliest ever' },
+    { icon:'🌙', label:'Latest Log', value: latestLabel, sub: 'latest ever' },
+  ];
+
+  container.innerHTML = bests.map(b => `
+    <div style="background:#1E1E2A;border-radius:14px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;">
+      <div style="font-size:1.4rem;line-height:1;">${b.icon}</div>
+      <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#4A3880;margin-top:6px;">${b.label}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:700;color:#EEEAF8;line-height:1;margin-top:2px;">${b.value}</div>
+      <div style="font-size:0.72rem;color:#A78BFA;margin-top:2px;">${b.sub}</div>
     </div>
   `).join('');
 }
@@ -1643,7 +1722,7 @@ function render() {
   renderStreak(data);
   renderHeatmap(data);
   renderMonthChart();
-  renderYearBars(data);
+  renderPersonalBests(data);
   renderTable(data);
   updateUndoBtn(data);
 }
