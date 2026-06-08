@@ -1157,7 +1157,8 @@ function daysInMonth(year, month) {
 
 function getDateKey(ts) {
   const d = new Date(ts);
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
 
 function renderStreak(data) {
@@ -1425,9 +1426,10 @@ function renderPersonalBests(data) {
   const bestDayCount = dayCounts[bestDayKey];
 
   // Longest streak ever + date range
+  const pad = n => String(n).padStart(2, '0');
   const loggedDays = new Set(nonBulk.map(d => {
     const date = new Date(d.ts);
-    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
   }));
   const allDays = [...loggedDays].sort();
   let bestStreak = 0, tempStreak = 0, bestStreakEnd = 0;
@@ -1698,11 +1700,13 @@ function updateUndoBtn(data) {
 
 function renderStats(data) {
   const now = new Date();
-  const todayStr = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const pad = n => String(n).padStart(2,'0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
   let today = 0, thisMonth = 0, thisYear = 0;
   data.forEach(d => {
     const date = new Date(d.ts);
-    if (`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}` === todayStr) today++;
+    const dStr = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
+    if (dStr === todayStr) today++;
     if (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) thisMonth++;
     if (date.getFullYear() === now.getFullYear()) thisYear++;
   });
